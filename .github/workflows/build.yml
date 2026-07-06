@@ -1,10 +1,11 @@
+
 name: Build APK
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ main ]
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
@@ -12,7 +13,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -26,22 +28,21 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build Release APK
-        run: ./gradlew assembleRelease
+      - name: Build with Gradle
+        run: ./gradlew assembleRelease --no-daemon
 
-      - name: Upload APK as Artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: ScreenController-APK
           path: app/build/outputs/apk/release/app-release.apk
-          compression-level: 0
-          overwrite: true
+          if-no-files-found: error
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
+        if: success()
         with:
           tag_name: v1.0.${{ github.run_number }}
           name: Release v1.0.${{ github.run_number }}
           files: app/build/outputs/apk/release/app-release.apk
-          generate_release_notes: true
-          
+          generate_release_notes: false
